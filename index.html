@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+		<script src="ImageCrop.js"></script>
+		<script type="text/javascript">
+			var fileSelect = function(evt) {
+
+    			if (window.File && window.FileReader && window.FileList && window.Blob) {
+        			var files = evt.target.files;
+ 			 
+        			var result = '';
+        			var file;
+        			for (var i = 0; file = files[i]; i++) {
+            			// if the file is not an image, continue
+            			if (!file.type.match('image.*')) {
+                			continue;
+            			}
+
+						window.IC = new ImageCrop($('#mytouch'), file, {});
+						IC.init();
+        			}
+    			} else {
+        			alert('The File APIs are not fully supported in this browser.');
+    			}
+
+			};
+
+			$(function() {
+				$('#file-upload').bind('change', fileSelect);
+			});
+		</script>
+	</head>
+	<body>
+		<input type="file" id="file-upload" />
+		<output id="filesInfo">
+			<div id="mytouch" style="width: 250px; height: 300px;"></div>
+		</output>
+	</body>
+</html>

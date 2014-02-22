@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+		<meta name="viewport" content="width=device-width, user-scalable=no">
 		<script src="ImageCrop.js"></script>
 		<script type="text/javascript">
 			var fileSelect = function(evt) {
+				'use strict';
 
     			if (window.File && window.FileReader && window.FileList && window.Blob) {
         			var files = evt.target.files;
@@ -12,12 +13,11 @@
         			var result = '';
         			var file;
         			for (var i = 0; file = files[i]; i++) {
-            			// if the file is not an image, continue
             			if (!file.type.match('image.*')) {
                 			continue;
             			}
 
-						window.IC = new ImageCrop($('#mytouch'), file, {});
+						window.IC = new ImageCrop(document.getElementById('target'), file, {});
 						IC.init();
         			}
     			} else {
@@ -25,16 +25,18 @@
     			}
 
 			};
-
-			$(function() {
-				$('#file-upload').bind('change', fileSelect);
-			});
 		</script>
 	</head>
 	<body>
 		<input type="file" id="file-upload" />
 		<output id="filesInfo">
-			<div id="mytouch" style="width: 250px; height: 300px;"></div>
+			<div id="target" style="width: 250px; height: 300px;"></div>
 		</output>
+
+		<script type="text/javascript">
+			document.getElementById('file-upload').addEventListener(
+				'change', fileSelect, false
+			);
+		</script>
 	</body>
 </html>

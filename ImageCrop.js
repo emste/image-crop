@@ -1,24 +1,17 @@
 (function(global) {
 	'use strict';
 
-	var ImageCrop = function(target, source, options) {
+	var ImageCrop = function(target, options) {
 		this.target = target;
-		this.source = source;
-
-		if(!this.source.type.match('image.*')) {
-			// TODO
-			throw new Error('No image given');
-		}
 
 		this.fileReader = new FileReader();
 		this.fileReader.onload = this.callbacks.onFileReaderLoad.bind(this);
 
-		this.options = options;
+		this.options = options || {};
 	};
 
 	ImageCrop.prototype = {
 		target: null,
-		source: null,
 		fileReader: null,
 		imageBase64: null,
 
@@ -43,8 +36,13 @@
 
 		scrollSpeed: 2.0,
 
-		init: function() {
-			this.fileReader.readAsDataURL(this.source);
+		read: function(file) {
+			if(!file.type.match('image.*')) {
+				// TODO
+				throw new Error('No image given');
+			}
+
+			this.fileReader.readAsDataURL(file);
 		},
 
 		crop: function() {
@@ -131,7 +129,7 @@
 			},
 
 			onTouchStart: function(e) {
-				this.activeTouches = Math.min(this.activeTouches + 1);
+				this.activeTouches = Math.max(1, this.activeTouches + 1);
 
 				if(this.activeTouches == 1) {
 					this.singleTouch = true;
@@ -148,7 +146,7 @@
 					this.multiTouch = this.singleTouch = false;
 				}
 
-				this.lastTouchX = this.lastTouchY = null;
+				this.lastTouchX = this.lastTouchY = this.lastDistance = null;
 			},
 
 			onTouchMove: function(e) {
@@ -187,10 +185,10 @@
 					if(this.lastDistance) {
 						if(this.lastDistance > distance) {
 							this.updateProportion(.01);
-							this.updateBackgroundPosition(-30 * this.scrollSpeed, -30 * this.scrollSpeed);
+							this.updateBackgroundPosition(0, 0);
 						} else {
 							this.updateProportion(-.01);
-							this.updateBackgroundPosition(30 * this.scrollSpeed, 30 + this.scrollSpeed);
+							this.updateBackgroundPosition(0, 0);
 						}
 
 						this.draw();

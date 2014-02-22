@@ -17,8 +17,8 @@
                 			continue;
             			}
 
-						window.IC = new ImageCrop(document.getElementById('target'), file, {});
-						IC.init();
+						window.IC = new ImageCrop(document.getElementById('target'));
+						IC.read(file);
         			}
     			} else {
         			alert('The File APIs are not fully supported in this browser.');
@@ -26,11 +26,25 @@
 
 			};
 		</script>
+		<style type="text/css">
+			<!--
+			#target {
+				width: 250px;
+				height: 250px;
+				margin: 20px auto;
+			}
+
+			canvas {
+				border: 3px solid black;
+				border-radius: 10px;
+			}
+			-->
+		</style>
 	</head>
 	<body>
 		<input type="file" id="file-upload" />
 		<output id="filesInfo">
-			<div id="target" style="width: 250px; height: 300px;"></div>
+			<div id="target"></div>
 		</output>
 
 		<script type="text/javascript">

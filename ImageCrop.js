@@ -55,6 +55,7 @@
 		},
 
 		crop: function() {
+			return this.canvas.toDataURL();
 		},
 
 		getOpt: function(name) {

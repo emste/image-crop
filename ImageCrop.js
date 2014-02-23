@@ -125,7 +125,10 @@
 		},
 
 		updateProportion: function(p) {
-		 	 this.proportion = Math.max(this.minProportion, this.proportion - p);
+			var old = this.proportion;
+			this.proportion = Math.max(this.minProportion, this.proportion - p);
+
+			return old !== this.proportion;
 		},
 
 		callbacks: {
@@ -162,7 +165,7 @@
 			onTouchMove: function(e) {
 				var t0, t1, changed = false,
 					dX, dY, distance,
-					scrollSpeed, zoomSpeed;
+					scrollSpeed, zoomSpeed, zoomUpdateOffset;
 
 				e.preventDefault();
 
@@ -197,16 +200,19 @@
 					}
 
 					if(this.lastDistance) {
+						zoomUpdateOffset = .5 / this.proportion;
+
 						if(this.lastDistance > distance) {
-							this.updateProportion(zoomSpeed * this.proportion);
-							this.updateOffset(0, 0);
+							changed = this.updateProportion(zoomSpeed * this.proportion);
+							if(changed) this.updateOffset(-zoomUpdateOffset, -zoomUpdateOffset);
 						} else {
-							this.updateProportion(-zoomSpeed * this.proportion);
-							this.updateOffset(0, 0);
+							changed = this.updateProportion(-zoomSpeed * this.proportion);
+							if(changed) this.updateOffset(zoomUpdateOffset, zoomUpdateOffset);
 						}
 
-						this.draw();
+						if(changed) this.draw();
 					}
+
 					this.lastDistance = distance;
 				}
 

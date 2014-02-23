@@ -34,7 +34,7 @@
 
 		canvas: null,
 
-		scrollSpeed: 2.0,
+		scrollSpeed: 1.0,
 
 		read: function(file) {
 			if(!file.type.match('image.*')) {
@@ -103,8 +103,8 @@
 			var maxX = (-this.targetWidth + this.image.width * this.proportion) / this.proportion,
 				maxY = (-this.targetHeight + this.image.height * this.proportion) / this.proportion,
 
-				newX = Math.min(maxX, Math.max(0, this.backgroundPositionX + dX)),
-				newY = Math.min(maxY, Math.max(0, this.backgroundPositionY + dY)),
+				newX = Math.min(maxX, Math.max(0, this.backgroundPositionX + dX / this.proportion)),
+				newY = Math.min(maxY, Math.max(0, this.backgroundPositionY + dY / this.proportion)),
 
 				changed = newX != this.backgroundPositionX || newY != this.backgroundPositionY;
 

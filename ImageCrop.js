@@ -36,10 +36,13 @@
 
 		options: null,
 
+		animationFrame: null,
+
 		defaults: {
 			'zoomSpeed': .035,
 			'scrollSpeed': 1,
-			'zoomDelay': 1
+			'zoomDelay': 1,
+			'useRequestAnimationFrame': true
 		},
 
 		read: function(file) {
@@ -83,24 +86,31 @@
 			this.canvas.width = this.targetWidth;
 			this.canvas.height = this.targetHeight;
 
-			this.draw();
-
 			this.target.appendChild(this.canvas);
+
+			this.draw();
 
 			this.canvas.addEventListener('touchstart', this.callbacks.onTouchStart.bind(this), false)
 			this.canvas.addEventListener('touchend', this.callbacks.onTouchEnd.bind(this), false)
 			this.canvas.addEventListener('touchmove', this.callbacks.onTouchMove.bind(this), false);
 		},
 
-		draw: function() {
-			this.canvas.width = this.canvas.width;
-			this.canvas.getContext('2d').drawImage(
-				this.image,
-				this.offsetX, this.offsetY,
-				this.targetWidth / this.proportion, this.targetHeight / this.proportion,
-				0, 0,
-				this.targetWidth, this.targetHeight
-			);
+		draw: function(doIt) {
+			var reqAnimFrame = this.getOpt('useRequestAnimationFrame');
+
+			if(!doIt && reqAnimFrame) {
+				window.cancelAnimationFrame(this.animationFrame);
+				this.animationFrame = window.requestAnimationFrame(this.draw.bind(this, true));
+			} else if(doIt || !reqAnimFrame) {
+				this.canvas.width = this.canvas.width;
+				this.canvas.getContext('2d').drawImage(
+					this.image,
+					this.offsetX, this.offsetY,
+					this.targetWidth / this.proportion, this.targetHeight / this.proportion,
+					0, 0,
+					this.targetWidth, this.targetHeight
+				);
+			}
 		},
 
 		retrieveImageData: function() {

@@ -39,6 +39,8 @@
 		offsetX: null,
 		offsetY: null,
 
+		pixelRatio: window.devicePixelRatio || 1,
+
 		canvas: null,
 
 		options: null,
@@ -49,7 +51,9 @@
 			'zoomSpeed': .035,
 			'scrollSpeed': 1,
 			'zoomDelay': 1,
-			'useRequestAnimationFrame': true
+			'useRequestAnimationFrame': true,
+			'width': null,
+			'height': null
 		},
 
 		/**
@@ -66,7 +70,19 @@
 		 * Returns the currently visible area as data url (base64).
 		 */
 		crop: function() {
-			return this.canvas.toDataURL();
+			var canvas = document.createElement('canvas');
+			canvas.width = this.getWidth();
+			canvas.height = this.getHeight();
+
+			canvas.getContext('2d').drawImage(
+				this.image,
+				this.offsetX, this.offsetY,
+				this.targetWidth / this.proportion, this.targetHeight / this.proportion,
+				0, 0,
+				this.getWidth(), this.getHeight()
+			);
+
+			return canvas.toDataURL();
 		},
 
 		/***********************************************************************
@@ -81,6 +97,14 @@
 		 */
 		getOpt: function(name) {
 			return (undefined !== this.options[name] ? this.options : this.defaults)[name];
+		},
+
+		getWidth: function() {
+			return this.getOpt('width') || this.targetWidth;
+		},
+
+		getHeight: function() {
+			return this.getOpt('height') || this.targetHeight;
 		},
 
 		/**
@@ -98,6 +122,11 @@
 			proportionY = this.targetHeight / this.image.height;
 
 			this.proportion = this.minProportion = Math.max(proportionX, proportionY);
+			this.maxProportion = Math.min(
+				this.targetWidth / this.pixelRatio / this.getWidth(),
+				this.targetHeight / this.pixelRatio / this.getHeight()
+			);
+
 			this.offsetX = this.offsetY = 0;
 
 			if(null === this.canvas) {
@@ -171,7 +200,7 @@
 		 */
 		updateProportion: function(p) {
 			var old = this.proportion;
-			this.proportion = Math.max(this.minProportion, this.proportion - p);
+			this.proportion = Math.max(this.minProportion, Math.min(this.maxProportion, this.proportion - p));
 
 			return old !== this.proportion;
 		},

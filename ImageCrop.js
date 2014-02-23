@@ -29,8 +29,8 @@
 
 		lastDistance: null,
 
-		backgroundPositionX: 0,
-		backgroundPositionY: 0,
+		offsetX: 0,
+		offsetY: 0,
 
 		canvas: null,
 
@@ -96,7 +96,7 @@
 			this.canvas.width = this.canvas.width;
 			this.canvas.getContext('2d').drawImage(
 				this.image,
-				this.backgroundPositionX, this.backgroundPositionY,
+				this.offsetX, this.offsetY,
 				this.targetWidth / this.proportion, this.targetHeight / this.proportion,
 				0, 0,
 				this.targetWidth, this.targetHeight
@@ -109,17 +109,17 @@
 			this.image.src = this.imageBase64;
 		},
 
-		updateBackgroundPosition: function(dX, dY) {
-			var maxX = (-this.targetWidth + this.image.width * this.proportion) / this.proportion,
-				maxY = (-this.targetHeight + this.image.height * this.proportion) / this.proportion,
+		updateOffset: function(dX, dY) {
+			var maxX = (-this.targetWidth / this.proportion + this.image.width),
+				maxY = (-this.targetHeight / this.proportion + this.image.height),
 
-				newX = Math.min(maxX, Math.max(0, this.backgroundPositionX + dX / this.proportion)),
-				newY = Math.min(maxY, Math.max(0, this.backgroundPositionY + dY / this.proportion)),
+				newX = Math.min(maxX, Math.max(0, this.offsetX + dX / this.proportion)),
+				newY = Math.min(maxY, Math.max(0, this.offsetY + dY / this.proportion)),
 
-				changed = newX != this.backgroundPositionX || newY != this.backgroundPositionY;
+				changed = newX != this.offsetX || newY != this.offsetY;
 
-			this.backgroundPositionX = newX;
-			this.backgroundPositionY = newY;
+			this.offsetX = newX;
+			this.offsetY = newY;
 
 			return changed;
 		},
@@ -173,7 +173,7 @@
 					if(this.lastTouchX === null) this.lastTouchX = t0.clientX;
 					if(this.lastTouchY === null) this.lastTouchY = t0.clientY;
 
-					changed = this.updateBackgroundPosition(
+					changed = this.updateOffset(
 						(this.lastTouchX - t0.clientX) * scrollSpeed,
 						(this.lastTouchY - t0.clientY) * scrollSpeed
 					);
@@ -195,14 +195,14 @@
 					if(Math.abs(distance - this.lastDistance) < this.getOpt('zoomDelay')) {
 						return;
 					}
-					
+
 					if(this.lastDistance) {
 						if(this.lastDistance > distance) {
 							this.updateProportion(zoomSpeed * this.proportion);
-							this.updateBackgroundPosition(0, 0);
+							this.updateOffset(0, 0);
 						} else {
 							this.updateProportion(-zoomSpeed * this.proportion);
-							this.updateBackgroundPosition(0, 0);
+							this.updateOffset(0, 0);
 						}
 
 						this.draw();

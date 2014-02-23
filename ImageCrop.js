@@ -150,7 +150,8 @@
 			},
 
 			onTouchMove: function(e) {
-				var t0, t1, changed = false;
+				var t0, t1, changed = false,
+					dX, dY, distance;
 
 				e.preventDefault();
 
@@ -172,11 +173,11 @@
 					this.lastTouchX = t0.clientX;
 					this.lastTouchY = t0.clientY;
 				} else if(e.touches.length == 2) {
-					var t0 = e.touches[0],
-						t1 = e.touches[1],
-						dX = t1.clientX - t0.clientX,
-						dY = t1.clientY - t0.clientY,
-						distance = Math.sqrt(dX*dX + dY*dY);
+					t0 = e.touches[0];
+					t1 = e.touches[1];
+					dX = t1.clientX - t0.clientX;
+					dY = t1.clientY - t0.clientY;
+					distance = Math.sqrt(dX*dX + dY*dY);
 
 					if(Math.abs(distance - this.lastDistance) < 3) {
 						return;

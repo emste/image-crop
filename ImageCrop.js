@@ -34,7 +34,13 @@
 
 		canvas: null,
 
-		scrollSpeed: 1.0,
+		options: null,
+
+		defaults: {
+			'zoomSpeed': .035,
+			'scrollSpeed': 1,
+			'zoomDelay': 1
+		},
 
 		read: function(file) {
 			if(!file.type.match('image.*')) {
@@ -46,6 +52,10 @@
 		},
 
 		crop: function() {
+		},
+
+		getOpt: function(name) {
+			return (undefined !== this.options[name] ? this.options : this.defaults)[name];
 		},
 
 		show: function() {
@@ -151,19 +161,21 @@
 
 			onTouchMove: function(e) {
 				var t0, t1, changed = false,
-					dX, dY, distance;
+					dX, dY, distance,
+					scrollSpeed, zoomSpeed;
 
 				e.preventDefault();
 
 				if(!this.multiTouch && e.touches.length == 1) {
 					t0 = e.touches[0];
+					scrollSpeed = this.getOpt('scrollSpeed');
 
 					if(this.lastTouchX === null) this.lastTouchX = t0.clientX;
 					if(this.lastTouchY === null) this.lastTouchY = t0.clientY;
 
 					changed = this.updateBackgroundPosition(
-						(this.lastTouchX - t0.clientX) * this.scrollSpeed,
-						(this.lastTouchY - t0.clientY) * this.scrollSpeed
+						(this.lastTouchX - t0.clientX) * scrollSpeed,
+						(this.lastTouchY - t0.clientY) * scrollSpeed
 					);
 
 					if(changed) {
@@ -178,17 +190,18 @@
 					dX = t1.clientX - t0.clientX;
 					dY = t1.clientY - t0.clientY;
 					distance = Math.sqrt(dX*dX + dY*dY);
+					zoomSpeed = this.getOpt('zoomSpeed');
 
-					if(Math.abs(distance - this.lastDistance) < 3) {
+					if(Math.abs(distance - this.lastDistance) < this.getOpt('zoomDelay')) {
 						return;
 					}
 					
 					if(this.lastDistance) {
 						if(this.lastDistance > distance) {
-							this.updateProportion(.01);
+							this.updateProportion(zoomSpeed * this.proportion);
 							this.updateBackgroundPosition(0, 0);
 						} else {
-							this.updateProportion(-.01);
+							this.updateProportion(-zoomSpeed * this.proportion);
 							this.updateBackgroundPosition(0, 0);
 						}
 

@@ -1,13 +1,20 @@
 (function(global) {
 	'use strict';
 
-	var ImageCrop = function(target, options) {
+	/**
+	 * Creates a new ImageCrop object. Sets a target dom element and a custom
+	 * configuration. See the 'defaults' object for possible properties.
+	 *
+	 * @param target dom element
+	 * @param config optional configuration object
+	 */
+	var ImageCrop = function(target, config) {
 		this.target = target;
 
 		this.fileReader = new FileReader();
 		this.fileReader.onload = this.callbacks.onFileReaderLoad.bind(this);
 
-		this.options = options || {};
+		this.options = config || {};
 	};
 
 	ImageCrop.prototype = {
@@ -45,38 +52,47 @@
 			'useRequestAnimationFrame': true
 		},
 
-		read: function(file) {
-			if(!file.type.match('image.*')) {
-				// TODO
-				throw new Error('No image given');
-			}
-
-			this.fileReader.readAsDataURL(file);
+		/**
+		 * Read and load the given source file, will override any previously
+		 * loaded image data. Make sure the file is of type image/*.
+		 *
+		 * @param imageFile File object
+		 */
+		read: function(imageFile) {
+			this.fileReader.readAsDataURL(imageFile);
 		},
 
+		/**
+		 * Returns the currently visible area as data url (base64).
+		 */
 		crop: function() {
 			return this.canvas.toDataURL();
 		},
 
+		/***********************************************************************
+		 * private methods below
+		 **********************************************************************/
+
+		/**
+		 * Returns the given property from the options object or falls back to
+		 * defaults if.
+		 *
+		 * @param name
+		 */
 		getOpt: function(name) {
 			return (undefined !== this.options[name] ? this.options : this.defaults)[name];
 		},
 
+		/**
+		 * Initializes or resets the canvas element.
+		 */
 		show: function() {
 			var proportionX, proportionY, style;
-
-			if(!this.imageBase64 || !this.image || !this.image.width) {
-				throw new Error('Image data not initialized!');
-			}
 
 			style = window.getComputedStyle(this.target);
 
 			this.targetWidth  = parseInt(style.width, 10);
 			this.targetHeight = parseInt(style.height, style);
-
-			if(this.image.width < this.targetWidth || this.image.height < this.targetHeight) {
-				throw new Error('Image too small');
-			}
 
 			proportionX = this.targetWidth / this.image.width;
 			proportionY = this.targetHeight / this.image.height;
@@ -97,7 +113,11 @@
 			this.draw();
 		},
 
-		draw: function(doIt) {
+		/**
+		 * Either (re)draws the canvas instantly or queues for the next
+		 * animation frame.
+		 */
+		draw: function(/* internal */doIt) {
 			var reqAnimFrame = this.getOpt('useRequestAnimationFrame');
 
 			if(!doIt && reqAnimFrame) {
@@ -115,12 +135,20 @@
 			}
 		},
 
+		/**
+		 * Convertion from data url to image element.
+		 */
 		retrieveImageData: function() {
 			this.image = new Image;
 			this.image.onload = this.callbacks.onImageLoad.bind(this);
 			this.image.src = this.imageBase64;
 		},
 
+		/**
+		 * Updates the current offset by the given delta values if possible.
+		 *
+		 * @return boolean true if changed
+		 */
 		updateOffset: function(dX, dY) {
 			var maxX = (-this.targetWidth / this.proportion + this.image.width),
 				maxY = (-this.targetHeight / this.proportion + this.image.height),
@@ -136,6 +164,11 @@
 			return changed;
 		},
 
+		/**
+		 * Updates the current proportion by the given delta if possible.
+		 *
+		 * @return boolean true if changed
+		 */
 		updateProportion: function(p) {
 			var old = this.proportion;
 			this.proportion = Math.max(this.minProportion, this.proportion - p);
@@ -143,6 +176,10 @@
 			return old !== this.proportion;
 		},
 
+		/**
+		 * Stores methods used as event callbacks. Conext is bound to the
+		 * ImageCrop object.
+		 */
 		callbacks: {
 			onFileReaderLoad: function(e) {
 				this.imageBase64 = e.target.result;

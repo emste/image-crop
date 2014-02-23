@@ -29,8 +29,8 @@
 
 		lastDistance: null,
 
-		offsetX: 0,
-		offsetY: 0,
+		offsetX: null,
+		offsetY: null,
 
 		canvas: null,
 
@@ -82,18 +82,19 @@
 			proportionY = this.targetHeight / this.image.height;
 
 			this.proportion = this.minProportion = Math.max(proportionX, proportionY);
+			this.offsetX = this.offsetY = 0;
 
-			this.canvas = document.createElement('canvas');
+			if(null === this.canvas) {
+				this.canvas = document.createElement('canvas');
+				this.target.appendChild(this.canvas);
+				this.canvas.addEventListener('touchstart', this.callbacks.onTouchStart.bind(this), false)
+				this.canvas.addEventListener('touchend', this.callbacks.onTouchEnd.bind(this), false)
+				this.canvas.addEventListener('touchmove', this.callbacks.onTouchMove.bind(this), false);
+			}
 			this.canvas.width = this.targetWidth;
 			this.canvas.height = this.targetHeight;
 
-			this.target.appendChild(this.canvas);
-
 			this.draw();
-
-			this.canvas.addEventListener('touchstart', this.callbacks.onTouchStart.bind(this), false)
-			this.canvas.addEventListener('touchend', this.callbacks.onTouchEnd.bind(this), false)
-			this.canvas.addEventListener('touchmove', this.callbacks.onTouchMove.bind(this), false);
 		},
 
 		draw: function(doIt) {

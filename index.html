@@ -17,7 +17,6 @@
                 			continue;
             			}
 
-						window.IC = new ImageCrop(document.getElementById('target'));
 						IC.read(file);
         			}
     			} else {
@@ -51,6 +50,8 @@
 			document.getElementById('file-upload').addEventListener(
 				'change', fileSelect, false
 			);
+
+			window.IC = new ImageCrop(document.getElementById('target'));
 		</script>
 	</body>
 </html>

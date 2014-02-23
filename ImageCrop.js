@@ -173,58 +173,55 @@
 				this.lastTouchX = this.lastTouchY = this.lastDistance = null;
 			},
 
-			onTouchMove: function(e) {
-				var t0, t1, changed = false,
-					dX, dY, distance,
-					scrollSpeed, zoomSpeed, zoomUpdateOffset;
+			onSingleTouch: function(t) {
+				var scrollSpeed = this.getOpt('scrollSpeed');
 
+				if(this.lastTouchX === null) this.lastTouchX = t.clientX;
+				if(this.lastTouchY === null) this.lastTouchY = t.clientY;
+
+				if(this.updateOffset(
+					(this.lastTouchX - t.clientX) * scrollSpeed,
+					(this.lastTouchY - t.clientY) * scrollSpeed
+				)) {
+					this.draw();
+				}
+
+				this.lastTouchX = t.clientX;
+				this.lastTouchY = t.clientY;
+			},
+
+			onMultiTouch: function(t0, t1) {
+				var dX = t1.clientX - t0.clientX,
+					dY = t1.clientY - t0.clientY,
+					distance = Math.sqrt(dX*dX + dY*dY),
+					zoomSpeed, zoomUpdateOffset, factor;
+
+				if(Math.abs(distance - this.lastDistance) < this.getOpt('zoomDelay')) {
+					return;
+				}
+
+				if(this.lastDistance) {
+					zoomSpeed = this.getOpt('zoomSpeed');
+
+					factor = this.lastDistance > distance ? 1 : -1;
+
+					if(this.updateProportion(factor * zoomSpeed * this.proportion)) {
+						zoomUpdateOffset = -factor * .5 / this.proportion;
+						this.updateOffset(zoomUpdateOffset, zoomUpdateOffset);
+						this.draw();
+					}
+				}
+
+				this.lastDistance = distance;
+			},
+
+			onTouchMove: function(e) {
 				e.preventDefault();
 
 				if(!this.multiTouch && e.touches.length == 1) {
-					t0 = e.touches[0];
-					scrollSpeed = this.getOpt('scrollSpeed');
-
-					if(this.lastTouchX === null) this.lastTouchX = t0.clientX;
-					if(this.lastTouchY === null) this.lastTouchY = t0.clientY;
-
-					changed = this.updateOffset(
-						(this.lastTouchX - t0.clientX) * scrollSpeed,
-						(this.lastTouchY - t0.clientY) * scrollSpeed
-					);
-
-					if(changed) {
-						this.draw();
-					}
-
-					this.lastTouchX = t0.clientX;
-					this.lastTouchY = t0.clientY;
+					this.callbacks.onSingleTouch.call(this, e.touches[0]);
 				} else if(e.touches.length == 2) {
-					t0 = e.touches[0];
-					t1 = e.touches[1];
-					dX = t1.clientX - t0.clientX;
-					dY = t1.clientY - t0.clientY;
-					distance = Math.sqrt(dX*dX + dY*dY);
-					zoomSpeed = this.getOpt('zoomSpeed');
-
-					if(Math.abs(distance - this.lastDistance) < this.getOpt('zoomDelay')) {
-						return;
-					}
-
-					if(this.lastDistance) {
-						zoomUpdateOffset = .5 / this.proportion;
-
-						if(this.lastDistance > distance) {
-							changed = this.updateProportion(zoomSpeed * this.proportion);
-							if(changed) this.updateOffset(-zoomUpdateOffset, -zoomUpdateOffset);
-						} else {
-							changed = this.updateProportion(-zoomSpeed * this.proportion);
-							if(changed) this.updateOffset(zoomUpdateOffset, zoomUpdateOffset);
-						}
-
-						if(changed) this.draw();
-					}
-
-					this.lastDistance = distance;
+					this.callbacks.onMultiTouch.call(this, e.touches[0], e.touches[1]);
 				}
 
 			}

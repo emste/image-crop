@@ -6,7 +6,7 @@
 	 * configuration. See the 'defaults' object for possible properties.
 	 *
 	 * @param target dom element
-	 * @param config optional configuration object
+	 * @param config [optional] configuration object
 	 */
 	var ImageCrop = function(target, config) {
 		this.target = target;
@@ -16,6 +16,11 @@
 
 		this.options = config || {};
 	};
+
+	ImageCrop.EVENT_ERROR_FILE_TYPE  = 'error.filetype';
+	ImageCrop.EVENT_ERROR_IMAGE_SIZE = 'error.size';
+	ImageCrop.EVENT_IMAGE_LOADING    = 'image.loading;'
+	ImageCrop.EVENT_IMAGE_LOADED     = 'image.loaded';
 
 	ImageCrop.prototype = {
 		target: null,
@@ -45,6 +50,8 @@
 
 		animationFrame: null,
 
+		listeners: null,
+
 		defaults: {
 			'zoomSpeed': .035,
 			'scrollSpeed': 1,
@@ -60,8 +67,16 @@
 		 *
 		 * @param imageFile File object
 		 */
-		read: function(imageFile) {
-			this.fileReader.readAsDataURL(imageFile);
+		read: function(file) {
+			if(!/image\/*/.test(file.type)) {
+				this.reset();
+				return this.fireEvent(ImageCrop.EVENT_ERROR_FILE_TYPE);
+			}
+
+			this.fireEvent(ImageCrop.EVENT_IMAGE_LOADING);
+			this.fileReader.readAsDataURL(file);
+
+			return this;
 		},
 
 		/**
@@ -81,6 +96,44 @@
 			);
 
 			return canvas.toDataURL();
+		},
+
+
+		/**
+		 * Adds a listener which will be called with the given context. Listens
+		 * to all events if no event name is specified.
+		 *
+		 * @param fn function
+		 * @param ctx [opional] context
+		 * @param ev [optional] name of the event to listen to
+		 */
+		addListener: function(fn, ctx, ev) {
+			if(!this.listeners) this.listeners = [];
+
+			this.listeners.push({fn: fn, ctx: ctx, ev: ev});
+
+			return this;
+		},
+
+		/**
+		 * Removes a previously added listener.
+		 *
+		 * @param fn function
+		 * @param ctx [optional] context
+		 */
+		removeListener: function(fn, ctx) {
+			var l = (this.listeners || []).length,
+				listener;
+
+			while(l--) {
+				listener = this.listeners[l];
+
+				if(listener.fn === fn && listener.ctx === ctx) {
+					this.listeners.splice(l, 1);
+				}
+			}
+
+			return this;
 		},
 
 		/***********************************************************************
@@ -105,6 +158,17 @@
 			return this.getOpt('outputHeight') || this.targetHeight;
 		},
 
+		fireEvent: function(type) {
+			var l = (this.listeners || []).length,
+				listener;
+
+			while(l--) {
+				listener = this.listeners[l];
+				if(listener.ev && listener.ev !== type) continue;
+				listener.fn.call(listener.ctx || null, type);
+			}
+		},
+
 		/**
 		 * Initializes or resets the canvas element.
 		 */
@@ -125,6 +189,11 @@
 				this.targetHeight /  this.getOutputHeight()
 			);
 
+			if(this.proportion > this.maxProportion) {
+				this.reset();
+				return this.fireEvent(ImageCrop.EVENT_ERROR_IMAGE_SIZE);
+			}
+
 			this.offsetX = this.offsetY = 0;
 
 			if(null === this.canvas) {
@@ -138,6 +207,8 @@
 			this.canvas.height = this.targetHeight;
 
 			this.draw();
+
+			this.fireEvent(ImageCrop.EVENT_IMAGE_LOADED);
 		},
 
 		/**
@@ -159,6 +230,13 @@
 					0, 0,
 					this.targetWidth, this.targetHeight
 				);
+			}
+		},
+
+		reset: function() {
+			if(null !== this.canvas) {
+				this.canvas.parentNode.removeChild(this.canvas);
+				this.canvas = null;
 			}
 		},
 

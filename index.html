@@ -13,10 +13,6 @@
         			var result = '';
         			var file;
         			for (var i = 0; file = files[i]; i++) {
-            			if (!file.type.match('image.*')) {
-                			continue;
-            			}
-
 						IC.read(file);
         			}
     			} else {
@@ -51,10 +47,39 @@
 				'change', fileSelect, false
 			);
 
+			// create an ImageCrop object by specifying a target element and
+			// some options
 			window.IC = new ImageCrop(document.getElementById('target'), {
 				outputWidth: 500,
 				outputHeight: 500
 			});
+
+			// listeners can be added as catch-all or for specific events
+			IC
+				.addListener(imageCropEvent)
+				.addListener(imageSizeError, null, ImageCrop.EVENT_ERROR_IMAGE_SIZE);
+
+
+			function imageCropEvent(ev) {
+				switch(ev) {
+					case ImageCrop.EVENT_IMAGE_LOADED:
+						console.log('Image loaded.');
+						break;
+					case ImageCrop.EVENT_IMAGE_LOADING:
+						console.log('Image loading.');
+						break;
+					case ImageCrop.EVENT_ERROR_FILE_TYPE:
+						alert('Don\'t trick me, that\'s not an image!');
+						break;
+					default:
+						console.log('Some other event happened.');
+						break;
+				}
+			}
+
+			function imageSizeError(ev) {
+				alert('The given image is too small!');
+			}
 		</script>
 	</body>
 </html>

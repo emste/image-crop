@@ -60,11 +60,11 @@
 		 * Read and load the given source file, will override any previously
 		 * loaded image data. Make sure the file is of type image/*.
 		 *
-		 * @param imageFile File object
+		 * @param file File object
 		 */
 		read: function(file) {
 			if(!/image\/*/.test(file.type)) {
-				this.reset();
+				this.resetCanvas();
 				return this.fireEvent(ImageCrop.EVENT_ERROR_FILE_TYPE);
 			}
 
@@ -72,7 +72,8 @@
 
 			if(null === this.fileReader) {
 				this.fileReader = new FileReader();
-				this.fileReader.onload = this.callbacks.onFileReaderLoad.bind(this);
+				this.fileReader.onload = this.callbacks.onFileReaderLoad
+					.bind(this);
 			}
 
 			this.fileReader.readAsDataURL(file);
@@ -91,7 +92,8 @@
 			canvas.getContext('2d').drawImage(
 				this.image,
 				this.offsetX, this.offsetY,
-				this.targetWidth / this.proportion, this.targetHeight / this.proportion,
+				this.targetWidth / this.proportion,
+				this.targetHeight / this.proportion,
 				0, 0,
 				this.getOutputWidth(), this.getOutputHeight()
 			);
@@ -143,12 +145,11 @@
 
 		/**
 		 * Returns the given property from the options object or falls back to
-		 * defaults if.
-		 *
-		 * @param name
+		 * defaults.
 		 */
 		getOpt: function(name) {
-			return (undefined !== this.options[name] ? this.options : this.defaults)[name];
+			return (undefined !== this.options[name] ? this.options :
+				this.defaults)[name];
 		},
 
 		getOutputWidth: function() {
@@ -171,7 +172,7 @@
 		},
 
 		/**
-		 * Initializes or resets the canvas element.
+		 * Initializes or updates the canvas element.
 		 */
 		show: function() {
 			var proportionX, proportionY, style;
@@ -184,26 +185,21 @@
 			proportionX = this.targetWidth / this.image.width;
 			proportionY = this.targetHeight / this.image.height;
 
-			this.proportion = this.minProportion = Math.max(proportionX, proportionY);
+			this.proportion = Math.max(proportionX, proportionY);
+			this.minProportion = this.proportion;
 			this.maxProportion = Math.min(
 				this.targetWidth / this.getOutputWidth(),
 				this.targetHeight /  this.getOutputHeight()
 			);
 
 			if(this.proportion > this.maxProportion) {
-				this.reset();
+				this.resetCanvas();
 				return this.fireEvent(ImageCrop.EVENT_ERROR_IMAGE_SIZE);
 			}
 
 			this.offsetX = this.offsetY = 0;
 
-			if(null === this.canvas) {
-				this.canvas = document.createElement('canvas');
-				this.target.appendChild(this.canvas);
-				this.canvas.addEventListener('touchstart', this.callbacks.onTouchStart.bind(this), false)
-				this.canvas.addEventListener('touchend', this.callbacks.onTouchEnd.bind(this), false)
-				this.canvas.addEventListener('touchmove', this.callbacks.onTouchMove.bind(this), false);
-			}
+			this.createCanvas();
 			this.canvas.width = this.targetWidth;
 			this.canvas.height = this.targetHeight;
 
@@ -221,24 +217,46 @@
 
 			if(!doIt && reqAnimFrame) {
 				window.cancelAnimationFrame(this.animationFrame);
-				this.animationFrame = window.requestAnimationFrame(this.draw.bind(this, true));
+				this.animationFrame = window.requestAnimationFrame(
+					this.draw.bind(this, true)
+				);
 			} else if(doIt || !reqAnimFrame) {
 				this.canvas.width = this.canvas.width;
 				this.canvas.getContext('2d').drawImage(
 					this.image,
 					this.offsetX, this.offsetY,
-					this.targetWidth / this.proportion, this.targetHeight / this.proportion,
+					this.targetWidth / this.proportion,
+					this.targetHeight / this.proportion,
 					0, 0,
 					this.targetWidth, this.targetHeight
 				);
 			}
 		},
 
-		reset: function() {
+		resetCanvas: function() {
 			if(null !== this.canvas) {
 				this.canvas.parentNode.removeChild(this.canvas);
 				this.canvas = null;
 			}
+		},
+
+		createCanvas: function() {
+			if(null !== this.canvas) return;
+
+			this.canvas = document.createElement('canvas');
+			this.target.appendChild(this.canvas);
+
+			this.canvas.addEventListener(
+				'touchstart', this.callbacks.onTouchStart.bind(this), false
+			);
+
+			this.canvas.addEventListener(
+				'touchend', this.callbacks.onTouchEnd.bind(this), false
+			);
+
+			this.canvas.addEventListener(
+				'touchmove', this.callbacks.onTouchMove.bind(this), false
+			);
 		},
 
 		/**
@@ -277,7 +295,10 @@
 		 */
 		updateProportion: function(p) {
 			var old = this.proportion;
-			this.proportion = Math.max(this.minProportion, Math.min(this.maxProportion, this.proportion - p));
+			this.proportion = Math.max(
+				this.minProportion,
+				Math.min(this.maxProportion, this.proportion - p)
+			);
 
 			return old !== this.proportion;
 		},
@@ -346,7 +367,6 @@
 
 				if(this.lastDistance) {
 					zoomSpeed = this.getOpt('zoomSpeed');
-
 					factor = this.lastDistance > distance ? 1 : -1;
 					prevValue = this.offsetX + this.targetWidth / this.proportion;
 

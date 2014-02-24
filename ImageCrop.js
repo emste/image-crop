@@ -10,10 +10,6 @@
 	 */
 	var ImageCrop = function(target, config) {
 		this.target = target;
-
-		this.fileReader = new FileReader();
-		this.fileReader.onload = this.callbacks.onFileReaderLoad.bind(this);
-
 		this.options = config || {};
 	};
 
@@ -74,6 +70,12 @@
 			}
 
 			this.fireEvent(ImageCrop.EVENT_IMAGE_LOADING);
+
+			if(null === this.fileReader) {
+				this.fileReader = new FileReader();
+				this.fileReader.onload = this.callbacks.onFileReaderLoad.bind(this);
+			}
+
 			this.fileReader.readAsDataURL(file);
 
 			return this;

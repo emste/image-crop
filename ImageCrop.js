@@ -21,7 +21,6 @@
 	ImageCrop.prototype = {
 		target: null,
 		fileReader: null,
-		imageBase64: null,
 
 		activeTouches: 0,
 		singleTouch: false,
@@ -245,10 +244,10 @@
 		/**
 		 * Convertion from data url to image element.
 		 */
-		retrieveImageData: function() {
+		retrieveImageData: function(imageBase64) {
 			this.image = new Image;
 			this.image.onload = this.callbacks.onImageLoad.bind(this);
-			this.image.src = this.imageBase64;
+			this.image.src = imageBase64;
 		},
 
 		/**
@@ -289,8 +288,7 @@
 		 */
 		callbacks: {
 			onFileReaderLoad: function(e) {
-				this.imageBase64 = e.target.result;
-				this.retrieveImageData();
+				this.retrieveImageData(e.target.result);
 			},
 
 			onImageLoad: function(e) {

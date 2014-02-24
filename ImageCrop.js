@@ -39,8 +39,6 @@
 		offsetX: null,
 		offsetY: null,
 
-		pixelRatio: window.devicePixelRatio || 1,
-
 		canvas: null,
 
 		options: null,
@@ -123,8 +121,8 @@
 
 			this.proportion = this.minProportion = Math.max(proportionX, proportionY);
 			this.maxProportion = Math.min(
-				this.targetWidth / this.pixelRatio / this.getOutputWidth(),
-				this.targetHeight / this.pixelRatio / this.getOutputHeight()
+				this.targetWidth / this.getOutputWidth(),
+				this.targetHeight /  this.getOutputHeight()
 			);
 
 			this.offsetX = this.offsetY = 0;

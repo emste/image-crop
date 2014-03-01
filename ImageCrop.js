@@ -317,7 +317,7 @@
 			},
 
 			onTouchStart: function(e) {
-				this.activeTouches = Math.max(1, this.activeTouches + 1);
+				this.activeTouches = Math.max(1, this.activeTouches + e.changedTouches.length);
 
 				if(this.activeTouches == 1) {
 					this.singleTouch = true;
@@ -328,7 +328,7 @@
 			},
 
 			onTouchEnd: function(e) {
-				this.activeTouches = Math.max(0, this.activeTouches - 1);
+				this.activeTouches = Math.max(0, this.activeTouches - e.changedTouches.length);
 
 				if(this.activeTouches == 0) {
 					this.multiTouch = this.singleTouch = false;

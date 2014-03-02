@@ -76,6 +76,9 @@
 					.bind(this);
 			}
 
+			var that = this;
+			EXIF.getData(file, function(){ that.exifData = this.exifdata; });
+
 			this.fileReader.readAsDataURL(file);
 
 			return this;
@@ -189,7 +192,7 @@
 			this.minProportion = this.proportion;
 			this.maxProportion = Math.min(
 				this.targetWidth / this.getOutputWidth(),
-				this.targetHeight /  this.getOutputHeight()
+				this.targetHeight / this.getOutputHeight()
 			);
 
 			if(this.proportion > this.maxProportion) {
@@ -213,7 +216,7 @@
 		 * animation frame.
 		 */
 		draw: function(/* internal */doIt) {
-			var reqAnimFrame = this.getOpt('useRequestAnimationFrame');
+			var reqAnimFrame = this.getOpt('useRequestAnimationFrame'), co;
 
 			if(!doIt && reqAnimFrame) {
 				window.cancelAnimationFrame(this.animationFrame);
@@ -222,7 +225,11 @@
 				);
 			} else if(doIt || !reqAnimFrame) {
 				this.canvas.width = this.canvas.width;
-				this.canvas.getContext('2d').drawImage(
+				co = this.canvas.getContext("2d");
+
+				co.save();
+				this.transformCoordinate();
+				co.drawImage(
 					this.image,
 					this.offsetX, this.offsetY,
 					this.targetWidth / this.proportion,
@@ -230,6 +237,7 @@
 					0, 0,
 					this.targetWidth, this.targetHeight
 				);
+				co.restore();
 			}
 		},
 
@@ -274,6 +282,13 @@
 		 * @return boolean true if changed
 		 */
 		updateOffset: function(dX, dY) {
+			var orientation = this.exifData.Orientation, tmp;
+			if(orientation > 5) dX *= -1;
+			if(orientation % 2 === 0) {
+				tmp = dX;
+				dX = dY; dY = tmp;
+			}
+
 			var maxX = (-this.targetWidth / this.proportion + this.image.width),
 				maxY = (-this.targetHeight / this.proportion + this.image.height),
 
@@ -302,6 +317,68 @@
 
 			return old !== this.proportion;
 		},
+
+		transformCoordinate: function() {
+			var ctx = this.canvas.getContext('2d'),
+				width = this.canvas.width,
+				height = this.canvas.height,
+				orientation = this.exifData.Orientation;
+
+			switch(orientation) {
+				case 5:
+				case 6:
+				case 7:
+				case 8:
+					this.canvas.width = height;
+					this.canvas.height = width;
+					break;
+				default:
+					this.canvas.width = width;
+					this.canvas.height = height;
+			}
+
+			switch(orientation) {
+				case 2:
+					// horizontal flip
+					ctx.translate(width, 0);
+					ctx.scale(-1, 1);
+					break;
+				case 3:
+					// 180 rotate left
+					ctx.translate(width, height);
+					ctx.rotate(Math.PI);
+					break;
+				case 4:
+					// vertical flip
+					ctx.translate(0, height);
+					ctx.scale(1, -1);
+					break;
+				case 5:
+					// vertical flip + 90 rotate right
+					ctx.rotate(0.5 * Math.PI);
+					ctx.scale(1, -1);
+					break;
+				case 6:
+					// 90 rotate right
+					ctx.rotate(0.5 * Math.PI);
+					ctx.translate(0, -height);
+					break;
+				case 7:
+					// horizontal flip + 90 rotate right
+					ctx.rotate(0.5 * Math.PI);
+					ctx.translate(width, -height);
+					ctx.scale(-1, 1);
+					break;
+				case 8:
+					// 90 rotate left
+					ctx.rotate(-0.5 * Math.PI);
+					ctx.translate(-width, 0);
+					break;
+				default:
+					break;
+			}
+		},
+		
 
 		/**
 		 * Stores methods used as event callbacks. Conext is bound to the

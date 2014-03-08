@@ -11,7 +11,6 @@
 	var ImageCrop = function(target, config) {
 		this.target = target;
 		this.options = config || {};
-		this.orientationCompensation = {};
 	};
 
 	ImageCrop.EVENT_ERROR_FILE_TYPE  = 'error.filetype';
@@ -227,6 +226,7 @@
 			this.createCanvas();
 			this.canvas.width = this.targetWidth;
 			this.canvas.height = this.targetHeight;
+			this.orientationCompensation = {};
 
 			this.draw();
 
@@ -405,6 +405,7 @@
 					ctx.translate(width, -height);
 					ctx.scale(-1, 1);
 					compensation.invertX = true;
+					compensation.invertY = true;
 					break;
 				case 8:
 					// 90 rotate left

@@ -89,7 +89,7 @@
 		/**
 		 * Returns the currently visible area as data url (base64).
 		 */
-		crop: function() {
+		getAsDataURL: function() {
 			var canvas = document.createElement('canvas');
 			canvas.width = this.getOutputWidth();
 			canvas.height = this.getOutputHeight();
@@ -104,6 +104,26 @@
 			);
 
 			return canvas.toDataURL();
+		},
+
+		getAsImage: function() {
+			var img = document.createElement('img');
+			img.src = this.getAsDataURL();
+			return img;
+		},
+
+		getAsBlob: function() {
+			var dataURL = this.getAsDataURL(),
+				byteString = atob(dataURL.split(',')[1]),
+				ab = new ArrayBuffer(byteString.length),
+				ia = new Uint8Array(ab),
+				i, l;
+
+			for(i = 0, l = byteString.length; i < l; i++) {
+				ia[i] = byteString.charCodeAt(i);
+			}
+
+			return new Blob([ab], { type: dataURL.split(',')[0].match("data:(image/.*);base64")[1] });
 		},
 
 		/**

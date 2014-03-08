@@ -475,7 +475,7 @@
 					dY = t1.clientY - t0.clientY,
 					distance = Math.sqrt(dX*dX + dY*dY),
 					zoomSpeed, zoomUpdateOffset, factor,
-					prevValue, newValue;
+					prevValue, newValue, compensation;
 
 				if(Math.abs(distance - this.lastDistance) < this.getOpt('zoomDelay')) {
 					return;
@@ -487,9 +487,15 @@
 					prevValue = this.offsetX + this.targetWidth / this.proportion;
 
 					if(this.updateProportion(factor * zoomSpeed * this.proportion)) {
+						compensation = this.orientationCompensation;
+
 						newValue = this.offsetX + this.targetWidth / this.proportion;
 						zoomUpdateOffset = (prevValue - newValue) * this.proportion / 2;
-						this.updateOffset(zoomUpdateOffset, zoomUpdateOffset);
+
+						this.updateOffset(
+							zoomUpdateOffset * (compensation.invertX ? -1 : 1),
+							zoomUpdateOffset * (compensation.invertY ? -1 : 1)
+						);
 						this.draw();
 					}
 				}

@@ -11,6 +11,7 @@
 	var ImageCrop = function(target, config) {
 		this.target = target;
 		this.options = config || {};
+		this.orientationCompensation = {};
 	};
 
 	ImageCrop.EVENT_ERROR_FILE_TYPE  = 'error.filetype';
@@ -42,6 +43,7 @@
 		canvas: null,
 
 		options: null,
+		orientationCompensation: null,
 
 		animationFrame: null,
 
@@ -103,7 +105,6 @@
 
 			return canvas.toDataURL();
 		},
-
 
 		/**
 		 * Adds a listener which will be called with the given context. Listens
@@ -283,9 +284,16 @@
 		 * @return boolean true if changed
 		 */
 		updateOffset: function(dX, dY) {
-			var orientation = this.exifData.Orientation, tmp;
-			if(orientation > 5) dX *= -1;
-			if(orientation % 2 === 0) {
+			var tmp;
+			if(this.orientationCompensation.invertX) {
+				dX *= -1;
+			}
+
+			if(this.orientationCompensation.invertY) {
+				dY *= -1;
+			}
+
+			if(this.orientationCompensation.swap) {
 				tmp = dX;
 				dX = dY; dY = tmp;
 			}
@@ -323,7 +331,8 @@
 			var ctx = this.canvas.getContext('2d'),
 				width = this.canvas.width,
 				height = this.canvas.height,
-				orientation = this.exifData.Orientation;
+				orientation = this.exifData.Orientation,
+				compensation = this.orientationCompensation;
 
 			switch(orientation) {
 				case 5:
@@ -332,6 +341,7 @@
 				case 8:
 					this.canvas.width = height;
 					this.canvas.height = width;
+					compensation.swap = true;
 					break;
 				default:
 					this.canvas.width = width;
@@ -343,16 +353,20 @@
 					// horizontal flip
 					ctx.translate(width, 0);
 					ctx.scale(-1, 1);
+					compensation.invertX = true;
 					break;
 				case 3:
 					// 180 rotate left
 					ctx.translate(width, height);
 					ctx.rotate(Math.PI);
+					compensation.invertY = true;
+					compensation.invertX = true;
 					break;
 				case 4:
 					// vertical flip
 					ctx.translate(0, height);
 					ctx.scale(1, -1);
+					compensation.invertY = true;
 					break;
 				case 5:
 					// vertical flip + 90 rotate right
@@ -363,17 +377,20 @@
 					// 90 rotate right
 					ctx.rotate(0.5 * Math.PI);
 					ctx.translate(0, -height);
+					compensation.invertX = true;
 					break;
 				case 7:
 					// horizontal flip + 90 rotate right
 					ctx.rotate(0.5 * Math.PI);
 					ctx.translate(width, -height);
 					ctx.scale(-1, 1);
+					compensation.invertX = true;
 					break;
 				case 8:
 					// 90 rotate left
 					ctx.rotate(-0.5 * Math.PI);
 					ctx.translate(-width, 0);
+					compensation.invertY = true;
 					break;
 				default:
 					break;

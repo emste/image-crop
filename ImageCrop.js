@@ -78,9 +78,10 @@
 			}
 
 			var that = this;
-			EXIF.getData(file, function(){ that.exifData = this.exifdata; });
-
-			this.fileReader.readAsDataURL(file);
+			EXIF.getData(file, function(){
+				that.exifData = this.exifdata;
+				that.fileReader.readAsDataURL(file);
+			});
 
 			return this;
 		},

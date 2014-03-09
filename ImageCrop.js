@@ -252,7 +252,8 @@
 
 				co.save();
 				this.transformCoordinate();
-				co.drawImage(
+				drawImageIOSFix(
+					co,
 					this.image,
 					this.offsetX, this.offsetY,
 					this.targetWidth / this.proportion,
@@ -516,6 +517,53 @@
 			}
 		}
 	};
+
+
+	/**
+	 * Based on stomita's fix for iOS rendering issue:
+	 * https://github.com/stomita/ios-imagefile-megapixel
+	 */
+
+	// Detecting vertical squash in loaded image.
+	function detectVerticalSquash(img) {
+		var iw = img.naturalWidth, ih = img.naturalHeight,
+			canvas = document.createElement('canvas'),
+			ctx = canvas.getContext('2d'),
+			sy = 0, ey = ih, py = ih,
+			data, alpha, ratio;
+
+		if(iw * ih < 1024 * 1024) return 1;
+
+		canvas.width = 1;
+		canvas.height = ih;
+
+		ctx.drawImage(img, 0, 0);
+		data = ctx.getImageData(0, 0, 1, ih).data;
+
+		// search image edge pixel position in case it is squashed vertically.
+		while (py > sy) {
+			alpha = data[(py - 1) * 4 + 3];
+			if (alpha === 0) {
+				ey = py;
+			} else {
+				sy = py;
+			}
+			py = (ey + sy) >> 1;
+		}
+
+		ratio = py / ih;
+		return ratio === 0 ? 1 : ratio;
+	}
+
+	function drawImageIOSFix(ctx, img, sx, sy, sw, sh, dx, dy, dw, dh) {
+		var vertSquashRatio = detectVerticalSquash(img);
+		// Works only if whole image is displayed:
+		// ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh / vertSquashRatio);
+		// The following works correct also when only a part of the image is displayed:
+		ctx.drawImage(img, sx * vertSquashRatio, sy * vertSquashRatio,
+			sw * vertSquashRatio, sh * vertSquashRatio,
+			dx, dy, dw, dh);
+	}
 
 	global.ImageCrop = ImageCrop;
 })(window);

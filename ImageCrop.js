@@ -209,8 +209,8 @@
 			proportionX = this.targetWidth / this.image.width;
 			proportionY = this.targetHeight / this.image.height;
 
-			// iOS bug?! maybe related to subsampling issue (http://stackoverflow.com/questions/11929099/html5-canvas-drawimage-ratio-bug-ios)... either way, restricting proportion to 0.13 works around the issue
-			this.proportion = Math.max(proportionX, proportionY, 0.13);
+			// rounding up to the 4th decimal place fixes an issue under iOS 7
+			this.proportion = Math.ceil(Math.max(proportionX, proportionY) * 1000) / 1000;
 			this.minProportion = this.proportion;
 			this.maxProportion = Math.min(
 				this.targetWidth / this.getOutputWidth(),
